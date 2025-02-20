@@ -1,8 +1,6 @@
-import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:typed_data';
 
@@ -15,9 +13,9 @@ class Mappage extends StatefulWidget {
 
 class _MappageState extends State<Mappage> {
   late GoogleMapController mapController;
-  Set<Marker> _markers = {}; // Multiple markers
-  LatLng? _currentLocation; // Store user location
+  Set<Marker> _markers = {}; // Store multiple markers
 
+  // List of marker positions with value & text
   final List<Map<String, dynamic>> _locations = [
     {"position": LatLng(37.7749, -122.4194), "value": "10", "label": "San Francisco"},
     {"position": LatLng(34.0522, -118.2437), "value": "5", "label": "Los Angeles"},
@@ -27,23 +25,13 @@ class _MappageState extends State<Mappage> {
   @override
   void initState() {
     super.initState();
-    _fetchCurrentLocation();
-  }
-
-  Future<void> _fetchCurrentLocation() async {
-    Position position = await _determinePosition();
-    print("object1");
-    setState(() {
-      _currentLocation = LatLng(position.latitude, position.longitude);
-    });
-
     _loadMarkers();
   }
 
+  // Load markers asynchronously
   Future<void> _loadMarkers() async {
     Set<Marker> markers = {};
 
-    // Load custom markers
     for (var location in _locations) {
       final Uint8List markerIcon = await _getBytesFromAsset('assets/images/man_avatar.png', 150);
       final Uint8List finalMarker = await _addBadgeAndText(markerIcon, location["value"], location["label"]);
@@ -55,22 +43,7 @@ class _MappageState extends State<Mappage> {
           icon: BitmapDescriptor.fromBytes(finalMarker),
           infoWindow: InfoWindow(
             title: location["label"],
-            snippet: "Custom Marker",
-          ),
-        ),
-      );
-    }
-
-    // Add current location marker
-    if (_currentLocation != null) {
-      markers.add(
-        Marker(
-          markerId: const MarkerId("current_location"),
-          position: _currentLocation!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          infoWindow: const InfoWindow(
-            title: "You Are Here",
-            snippet: "Your current location",
+            snippet: "Custom Marker with badge",
           ),
         ),
       );
@@ -105,16 +78,16 @@ class _MappageState extends State<Mappage> {
     final Canvas canvas = Canvas(recorder);
     final Paint paint = Paint();
 
-    final double iconY = badgeHeight + 10;
+    final double iconY = badgeHeight + 10; // Space added
     canvas.drawImage(marker, Offset(0, iconY), paint);
 
-    // Draw badge
+    // Draw circular badge
     final Paint badgePaint = Paint()..color = Colors.red;
     final double badgeX = iconWidth / 2;
     final double badgeY = badgeRadius;
     canvas.drawCircle(Offset(badgeX, badgeY), badgeRadius, badgePaint);
 
-    // Badge text
+    // Draw badge text
     final TextPainter badgeTextPainter = TextPainter(
       text: TextSpan(
         text: value,
@@ -129,13 +102,13 @@ class _MappageState extends State<Mappage> {
     badgeTextPainter.layout();
     badgeTextPainter.paint(canvas, Offset(badgeX - (badgeTextPainter.width / 2), badgeY - (badgeTextPainter.height / 2)));
 
-    // Bottom text
+    // Draw bottom text (larger for readability)
     final TextPainter bottomTextPainter = TextPainter(
       text: TextSpan(
         text: bottomText,
         style: const TextStyle(
           color: Colors.black,
-          fontSize: 20,
+          fontSize: 20, // Increased font size
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -151,30 +124,6 @@ class _MappageState extends State<Mappage> {
     return byteData!.buffer.asUint8List();
   }
 
-  Future<Position> _determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied.');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error('Location permissions are permanently denied.');
-    }
-
-    return await Geolocator.getCurrentPosition();
-  }
-
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
@@ -182,16 +131,14 @@ class _MappageState extends State<Mappage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Google Maps - Multiple Markers & Current Location')),
+      appBar: AppBar(title: const Text('Google Maps Multiple Markers')),
       body: GoogleMap(
         onMapCreated: _onMapCreated,
         initialCameraPosition: CameraPosition(
-          target: _currentLocation ?? _locations[0]["position"],
+          target: _locations[0]["position"], // Default focus
           zoom: 5,
         ),
         markers: _markers,
-        myLocationEnabled: true, // Show blue dot
-        myLocationButtonEnabled: true,
       ),
     );
   }

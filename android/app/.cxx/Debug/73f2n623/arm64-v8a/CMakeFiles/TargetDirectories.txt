@@ -1,0 +1,2 @@
+C:/Users/DELL/StudioProjects/mappackage/android/app/.cxx/Debug/73f2n623/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/DELL/StudioProjects/mappackage/android/app/.cxx/Debug/73f2n623/arm64-v8a/CMakeFiles/rebuild_cache.dir
