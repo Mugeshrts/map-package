@@ -5,14 +5,14 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:geolocator/geolocator.dart';
 import 'dart:typed_data';
 
-class Mappage extends StatefulWidget {
-  const Mappage({super.key});
+class Mapcircle extends StatefulWidget {
+  const Mapcircle({super.key});
 
   @override
-  State<Mappage> createState() => _MappageState();
+  State<Mapcircle> createState() => _MappageState();
 }
 
-class _MappageState extends State<Mappage> {
+class _MappageState extends State<Mapcircle> {
   late GoogleMapController mapController;
   final Set<Marker> _markers = {}; // Store multiple markers
   final Map<String, Uint8List> _cachedIcons = {}; // Cache marker images
@@ -20,16 +20,16 @@ class _MappageState extends State<Mappage> {
 
   /// 📍 **List of Locations with Different Marker Types**
   final List<Map<String, dynamic>> _locations = [
-    {"position": LatLng(11.280982, 77.595181), "value": "10", "label": "Hospital A", "markerType": "hospital"},
-    {"position": LatLng(11.275143, 77.590923), "value": "5", "label": "Police Station", "markerType": "police"},
-    {"position": LatLng(11.276488, 77.588505), "value": "8", "label": "School B", "markerType": "school"},
+    {"position": LatLng(11.280982, 77.595181), "value": "10", "label": "Factory", "markerType": "hospital"},
+    {"position": LatLng(11.275143, 77.590923), "value": "5", "label": "Hospital", "markerType": "police"},
+    {"position": LatLng(11.276488, 77.588505), "value": "8", "label": "Park", "markerType": "Park"},
   ];
 
   /// 📌 **Mapping Marker Types to Asset Paths**
   final Map<String, String> _markerAssets = {
     "hospital": "assets/images/industry.png",
     "police": "assets/images/hospital-building.png",
-    "school": "assets/images/park (2).png",
+    "Park": "assets/images/park (2).png",
   };
 
   @override
@@ -96,76 +96,64 @@ class _MappageState extends State<Mappage> {
     return customMarker;
   }
 
-   Future<Uint8List> _loadImage(String path, int width) async {
+  Future<Uint8List> _loadImage(String path, int width) async {
     final ByteData data = await rootBundle.load(path);
-    final ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width);
+    final ui.Codec codec = await ui.instantiateImageCodec(
+      data.buffer.asUint8List(),
+      targetWidth: width,
+    );
     final ui.FrameInfo frame = await codec.getNextFrame();
     final ByteData? byteData = await frame.image.toByteData(format: ui.ImageByteFormat.png);
     return byteData!.buffer.asUint8List();
   }
 
-   Future<Uint8List> _addBadgeAndText(Uint8List markerImage, String value, String label) async {
-  final ui.Codec codec = await ui.instantiateImageCodec(markerImage);
-  final ui.FrameInfo frame = await codec.getNextFrame();
-  final ui.Image baseIcon = frame.image;
+  Future<Uint8List> _addBadgeAndText(Uint8List markerImage, String value, String label) async {
+    final ui.Codec codec = await ui.instantiateImageCodec(markerImage);
+    final ui.FrameInfo frame = await codec.getNextFrame();
+    final ui.Image baseIcon = frame.image;
 
-  final double iconWidth = baseIcon.width.toDouble();
-  final double totalHeight = baseIcon.height + 70;
-  final double badgeHeight = 30;
-  final double badgeWidth = 50;
-  final double badgeY = 10;
+    final double iconWidth = baseIcon.width.toDouble();
+    final double totalHeight = baseIcon.height + 70; // Extra space for badge & text
+    final double badgeRadius = 20;
 
-  final ui.PictureRecorder recorder = ui.PictureRecorder();
-  final Canvas canvas = Canvas(recorder);
-  final Paint paint = Paint();
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(recorder);
+    final Paint paint = Paint();
 
-  // Draw base icon
-  canvas.drawImage(baseIcon, Offset(0, 40), paint);
+    // Draw base icon
+    canvas.drawImage(baseIcon, Offset(0, 40), paint);
 
-  // 🎨 **Proper Rectangle Badge**
-  final Paint badgePaint = Paint()..color = Colors.red;
-  final Rect badgeRect = Rect.fromLTWH(
-    (iconWidth - badgeWidth) / 2, // Center horizontally
-    badgeY,                      // Position above the marker
-    badgeWidth,
-    badgeHeight,
-  );
-  canvas.drawRect(badgeRect, badgePaint);
+    // Draw circular badge (Red Circle)
+    final Paint badgePaint = Paint()..color = Colors.red;
+    canvas.drawCircle(Offset(iconWidth / 2, badgeRadius), badgeRadius, badgePaint);
 
-  // 🏷 **Draw Badge Value (Centered White Text)**
-  final TextPainter badgeText = TextPainter(
-    text: TextSpan(
-      text: value,
-      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-    ),
-    textAlign: TextAlign.center,
-    textDirection: TextDirection.ltr,
-  );
-  badgeText.layout();
-  badgeText.paint(
-    canvas, 
-    Offset(badgeRect.left + (badgeRect.width - badgeText.width) / 2, 
-           badgeRect.top + (badgeRect.height - badgeText.height) / 2),
-  );
+    // Draw badge value (white text)
+    final TextPainter badgeText = TextPainter(
+      text: TextSpan(
+        text: value,
+        style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    badgeText.layout();
+    badgeText.paint(canvas, Offset((iconWidth - badgeText.width) / 2, badgeRadius - 10));
 
-  // 📌 **Draw Label Below Marker**
-  final TextPainter labelText = TextPainter(
-    text: TextSpan(
-      text: label,
-      style: const TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
-    ),
-    textAlign: TextAlign.center,
-    textDirection: TextDirection.ltr,
-  );
-  labelText.layout();
-  labelText.paint(canvas, Offset((iconWidth - labelText.width) / 2, totalHeight - 30));
+    // Draw label text below the icon
+    final TextPainter labelText = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: const TextStyle(color: Colors.black, fontSize: 40,),
+      ),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    );
+    labelText.layout();
+    labelText.paint(canvas, Offset((iconWidth - labelText.width) / 2, totalHeight - 30));
 
-  // Convert canvas to image
-  final ui.Image finalImage = await recorder.endRecording().toImage(iconWidth.toInt(), totalHeight.toInt());
-  final ByteData? byteData = await finalImage.toByteData(format: ui.ImageByteFormat.png);
-  return byteData!.buffer.asUint8List();
-}
-
+    final ui.Image finalImage = await recorder.endRecording().toImage(iconWidth.toInt(), totalHeight.toInt());
+    final ByteData? byteData = await finalImage.toByteData(format: ui.ImageByteFormat.png);
+    return byteData!.buffer.asUint8List();
+  }
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;

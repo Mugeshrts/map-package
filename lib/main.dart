@@ -1,14 +1,10 @@
-import 'dart:math';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'dart:typed_data';
-
-import 'package:mappackage/mappage/mapui.dart';
-
-
+import 'package:mappackage/Homepage/Homepage.dart';
+import 'package:mappackage/mappage/custommap.dart';
+import 'package:mappackage/mappage/mapheart.dart';
+import 'package:mappackage/mappage/maprectangle.dart';
+import 'package:mappackage/mappage/mapstar.dart';
+import 'package:mappackage/mappage/maptriangle.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const Mappage(),
+      home: const Mappage1(),
     );
   }
 }
